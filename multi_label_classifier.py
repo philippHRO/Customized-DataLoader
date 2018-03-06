@@ -95,6 +95,7 @@ if __name__ == "__main__":
     for epoch in range(epochs):
         ### training phase
         total_training_loss = 0.0
+        
         # total = 0.0
         for iter, traindata in enumerate(train_loader, 0):
             train_inputs, train_labels = traindata
@@ -111,8 +112,8 @@ if __name__ == "__main__":
 
             # total += train_labels.size(0)
             total_training_loss += loss.data[0]
-            print('Training Phase: Epoch: [%2d][%2d/%2d]\tIteration Loss: %.3f' %
-                (iter, epoch, epochs, loss.data[0] / train_labels.size(0)))
+            print('Training Phase: Epoch: [%2d][%2d/%2d]\tIteration Loss: %f' %
+                (iter, epoch, epochs, loss.data[0]))
         ### testing phase
         for iter, testdata in enumerate(test_loader, 0):
             test_inputs, test_labels = testdata
@@ -122,7 +123,7 @@ if __name__ == "__main__":
 
             test_outputs = model(test_inputs)
             test_loss = criterion(test_outputs, test_labels)
-            print('Testing Phase: Epoch: [%2d][%2d/%2d]\tIteration Loss: %.3f' %
-                (iter, epoch, epochs, test_loss.data[0] / test_labels.size(0)))
+            print('Testing Phase: Epoch: [%2d][%2d/%2d]\tIteration Loss: %f' %
+                (iter, epoch, epochs, test_loss.data[0]))
         torch.save(model, MY_FILENAME)
         print('Saved Model: ', MY_FILENAME)
