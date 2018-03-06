@@ -3,9 +3,15 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import dataset_processing
+#import my_functions
 import torch.optim as optim
 from torch.autograd import Variable
 import torch
+# import numpy as np
+# from PIL import Image, ImageFont, ImageDraw
+# import matplotlib.pyplot as plt
+
+# Quelle: https://github.com/jiangqy/Customized-DataLoader
 
 DATA_PATH = 'data'
 TRAIN_DATA = 'train_img'
@@ -15,12 +21,14 @@ TEST_IMG_FILE = 'test_img.txt'
 TRAIN_LABEL_FILE = 'train_label.txt'
 TEST_LABEL_FILE = 'test_label.txt'
 
-NLABELS = 5
+NLABELS = 2
+
+MY_FILENAME = "multilabel_classifier_save.pt" 
 
 batch_size = 4
 
 transformations = transforms.Compose([
-    transforms.Scale(256),
+    transforms.Resize(256),
     transforms.CenterCrop(224),
     transforms.ToTensor()])
 dset_train = dataset_processing.DatasetProcessing(
@@ -30,16 +38,16 @@ dset_test = dataset_processing.DatasetProcessing(
     DATA_PATH, TEST_DATA, TEST_IMG_FILE, TEST_LABEL_FILE, transformations)
 
 train_loader = DataLoader(dset_train,
-                          batch_size=batch_size,
-                          shuffle=True,
-                          num_workers=4
-                         )
+                        batch_size=batch_size,
+                        shuffle=True,
+                        num_workers=4
+                        )
 
 test_loader = DataLoader(dset_test,
-                         batch_size=batch_size,
-                         shuffle=False,
-                         num_workers=4
-                         )
+                        batch_size=batch_size,
+                        shuffle=False,
+                        num_workers=4
+                        )
 
 class MultiLabelNN(nn.Module):
     def __init__(self, nlabel):
@@ -63,46 +71,60 @@ class MultiLabelNN(nn.Module):
         x = self.fc2(x)
         return x
 
-use_gpu = torch.cuda.is_available()
-
-model = MultiLabelNN(NLABELS)
-if use_gpu:
-    model = model.cuda()
+if __name__ == "__main__":
 
 
-optimizer = optim.SGD(model.parameters(), lr=0.0001)
-criterion = nn.MultiLabelMarginLoss()
+    # Einige Ausgaben
+    print("Number of train samples: ", dset_train.__len__())
+    print("Number of test samples: ", dset_test.__len__())    
+    # print(train_data.__getitem__(1)) # get the actual image data of an image by index  
 
-epochs = 3
-for epoch in range(epochs):
-    ### training phase
-    total_training_loss = 0.0
-    # total = 0.0
-    for iter, traindata in enumerate(train_loader, 0):
-        train_inputs, train_labels = traindata
-        if use_gpu:
-            train_inputs, train_labels = Variable(train_inputs.cuda()), Variable(train_labels.cuda())
-        else: train_inputs, train_labels = Variable(train_inputs), Variable(train_labels)
+    #Print an image from the data_set
+    #my_functions.show_image_after_transform_viaGetItem(dset_train)  
 
-        optimizer.zero_grad()
 
-        train_outputs = model(train_inputs)
-        loss = criterion(train_outputs, train_labels)
-        loss.backward()
-        optimizer.step()
+    use_gpu = torch.cuda.is_available()
+    model = MultiLabelNN(NLABELS)
+    if use_gpu:
+        model = model.cuda()
 
-        # total += train_labels.size(0)
-        total_training_loss += loss.data[0]
-        print('Training Phase: Epoch: [%2d][%2d/%2d]\tIteration Loss: %.3f' %
-              (iter, epoch, epochs, loss.data[0] / train_labels.size(0)))
-    ### testing phase
-    for iter, testdata in enumerate(test_loader, 0):
-        test_inputs, test_labels = testdata
-        if use_gpu:
-            test_inputs, test_labels = Variable(test_inputs.cuda()), Variable(test_labels.cuda())
-        else: test_inputs, test_labels = Variable(test_inputs), Variable(test_labels)
 
-        test_outputs = model(test_inputs)
-        test_loss = criterion(test_outputs, test_labels)
-        print('Testing Phase: Epoch: [%2d][%2d/%2d]\tIteration Loss: %.3f' %
-              (iter, epoch, epochs, test_loss.data[0] / test_labels.size(0)))
+    optimizer = optim.SGD(model.parameters(), lr=0.0001)
+    criterion = nn.MultiLabelMarginLoss()
+
+    epochs = 3
+    for epoch in range(epochs):
+        ### training phase
+        total_training_loss = 0.0
+        # total = 0.0
+        for iter, traindata in enumerate(train_loader, 0):
+            train_inputs, train_labels = traindata
+            if use_gpu:
+                train_inputs, train_labels = Variable(train_inputs.cuda()), Variable(train_labels.cuda())
+            else: train_inputs, train_labels = Variable(train_inputs), Variable(train_labels)
+
+            optimizer.zero_grad()
+
+            train_outputs = model(train_inputs)
+            loss = criterion(train_outputs, train_labels)
+            loss.backward()
+            optimizer.step()
+
+            # total += train_labels.size(0)
+            total_training_loss += loss.data[0]
+            print('Training Phase: Epoch: [%2d][%2d/%2d]\tIteration Loss: %.3f' %
+                (iter, epoch, epochs, loss.data[0] / train_labels.size(0)))
+        ### testing phase
+        for iter, testdata in enumerate(test_loader, 0):
+            test_inputs, test_labels = testdata
+            if use_gpu:
+                test_inputs, test_labels = Variable(test_inputs.cuda()), Variable(test_labels.cuda())
+            else: test_inputs, test_labels = Variable(test_inputs), Variable(test_labels)
+
+            test_outputs = model(test_inputs)
+            test_loss = criterion(test_outputs, test_labels)
+            print('Testing Phase: Epoch: [%2d][%2d/%2d]\tIteration Loss: %.3f' %
+                (iter, epoch, epochs, test_loss.data[0] / test_labels.size(0)))
+        torch.save(model, MY_FILENAME)
+        print('Saved Model: ', MY_FILENAME)
+
