@@ -13,7 +13,7 @@ import dataset_processing
 # from PIL import Image, ImageFont, ImageDraw
 # import matplotlib.pyplot as plt
 
-# Quelle: https://github.com/jiangqy/Customized-DataLoader
+# Source: https://github.com/jiangqy/Customized-DataLoader
 
 DATA_PATH = 'data'
 TRAIN_DATA = 'train_img'
