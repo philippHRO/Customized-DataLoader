@@ -1,12 +1,14 @@
-from torchvision import transforms
+import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 import torch.nn.functional as F
-import dataset_processing
 #import my_functions
 import torch.optim as optim
 from torch.autograd import Variable
-import torch
+from torch.utils.data import DataLoader
+from torchvision import transforms
+
+import dataset_processing
+
 # import numpy as np
 # from PIL import Image, ImageFont, ImageDraw
 # import matplotlib.pyplot as plt
@@ -23,7 +25,7 @@ TEST_LABEL_FILE = 'test_label.txt'
 
 NLABELS = 2
 
-MY_FILENAME = "multilabel_classifier_save.pt" 
+MY_FILENAME = "multilabel_classifier_save.pt"
 
 batch_size = 4
 
@@ -73,8 +75,6 @@ class MultiLabelNN(nn.Module):
 
 if __name__ == "__main__":
 
-
-    # Einige Ausgaben
     print("Number of train samples: ", dset_train.__len__())
     print("Number of test samples: ", dset_test.__len__())    
     # print(train_data.__getitem__(1)) # get the actual image data of an image by index  
@@ -87,7 +87,6 @@ if __name__ == "__main__":
     model = MultiLabelNN(NLABELS)
     if use_gpu:
         model = model.cuda()
-
 
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
     criterion = nn.MultiLabelMarginLoss()
@@ -127,4 +126,3 @@ if __name__ == "__main__":
                 (iter, epoch, epochs, test_loss.data[0] / test_labels.size(0)))
         torch.save(model, MY_FILENAME)
         print('Saved Model: ', MY_FILENAME)
-
